@@ -1,0 +1,12 @@
+body {
+  margin: 40px;
+}
+
+.incorrect {
+  color: red;
+  margin-top: 4px;
+}
+
+.link {
+  color: grey; 
+}
