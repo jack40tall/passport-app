@@ -35,17 +35,30 @@ router.post('/register', (req, res) => {
   const hash = saltHash.hash
   const username = req.body.username
 
-  // TODO: Does this get typing
-  const newUser = new User({
-    username: username,
-    hash: hash,
-    salt: salt,
-  })
+  User.findOne({ 'username': username }, (err: Error, user: any) => {
+    if (err) return res.send(null)
 
-  //TODO: Are promises okay?
-  newUser.save()
-      .then((user: any) => {
-        // console.log(user)
-      })
+    if(user) {
+      return res.sendStatus(404)
+    }
+
+    // TODO: Does this get typing
+    const newUser = new User({
+      username: username,
+      hash: hash,
+      salt: salt,
+    })
+  
+    console.log("in register")
+  
+    newUser.save()
+        .then((user: any) => {
+          req.login(newUser, (err) => {
+            console.log('login success')
+            // console.log(req.user)
+            return res.send(req.user)
+          })
+        })
+  })
 })
 

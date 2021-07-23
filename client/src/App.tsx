@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import UnauthorizedAccess from './components/UnauthorizedAccess';
 import { useState, useEffect } from 'react';
 import LogoutPage from './components/LogoutPage';
+import Register from './components/Register';
 
 const App: React.FC = () => {
   const [ user, setUser ] = useState(null)
@@ -52,6 +53,9 @@ const App: React.FC = () => {
         </Route>
         <Route path="/logout">
           <LogoutPage />
+        </Route>
+        <Route path="/register">
+          <Register />
         </Route>
       </Switch>
     </AuthContext.Provider>

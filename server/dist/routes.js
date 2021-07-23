@@ -34,15 +34,26 @@ exports.router.post('/register', function (req, res) {
     var salt = saltHash.salt;
     var hash = saltHash.hash;
     var username = req.body.username;
-    // TODO: Does this get typing
-    var newUser = new database_1.User({
-        username: username,
-        hash: hash,
-        salt: salt,
-    });
-    //TODO: Are promises okay?
-    newUser.save()
-        .then(function (user) {
-        // console.log(user)
+    database_1.User.findOne({ 'username': username }, function (err, user) {
+        if (err)
+            return res.send(null);
+        if (user) {
+            return res.sendStatus(404);
+        }
+        // TODO: Does this get typing
+        var newUser = new database_1.User({
+            username: username,
+            hash: hash,
+            salt: salt,
+        });
+        console.log("in register");
+        newUser.save()
+            .then(function (user) {
+            req.login(newUser, function (err) {
+                console.log('login success');
+                // console.log(req.user)
+                return res.send(req.user);
+            });
+        });
     });
 });

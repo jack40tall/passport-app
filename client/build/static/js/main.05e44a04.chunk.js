@@ -1,2 +1,0 @@
-(this.webpackJsonpclient=this.webpackJsonpclient||[]).push([[0],{9:function(t,e,n){"use strict";n.r(e);var c=n(0),r=n.n(c),s=n(3),i=n.n(s),o=n(1);var p=function(){return Object(o.jsx)("h1",{children:"my passport app"})};i.a.render(Object(o.jsx)(r.a.StrictMode,{children:Object(o.jsx)(p,{})}),document.getElementById("root"))}},[[9,1,2]]]);
-//# sourceMappingURL=main.05e44a04.chunk.js.map

@@ -1,10 +1,10 @@
 import React, { ChangeEvent, useContext, useState } from 'react'
-import { useHistory, Link } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import axios from 'axios'
 import { AuthContext } from '../AuthContext'
 import '../style/style.css'
 
-const Login: React.FC = () => {
+const Register: React.FC = () => {
   const { setUser } = useContext(AuthContext)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -24,14 +24,16 @@ const Login: React.FC = () => {
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     try {
-      const response = await axios.post('/login', {
+      const response = await axios.post('/register', {
         username: username,
         password: password
       })
+      console.log(response.data)
       setUser(response.data.username)
       setIsIncorrect(false)
       history.push('/home-protected')
     } catch (err) {
+      console.log(err)
       setIsIncorrect(true)
     }
   }
@@ -45,12 +47,11 @@ const Login: React.FC = () => {
       <div className="field">
         <label>Password</label>
         <input autoComplete="new-password" onChange={e => onType(e, 'password')} type="password" name="password" placeholder="Password" value={password} />
-      {isIncorrect ? <div className="incorrect">Invalid username and/or password</div> : null}
+      {isIncorrect ? <div className="incorrect">Username already taken</div> : null}
       </div>
-      <button className="ui button" type="submit" >Submit</button>
-      <Link className="link" to="/register"><button className="ui button">Create account</button></Link>
+      <button className="ui button" type="submit" >Register</button>
     </form>
   )
 }
 
-export default Login
+export default Register

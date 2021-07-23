@@ -7,7 +7,8 @@
     "watch": "rm -rf dist && tsc -w",
     "build": "rm -rf dist && tsc",
     "dev": "nodemon dist/index.js | bunyan",
-    "start": "node dist/index.js | bunyan"
+    "start": "node dist/index.js | bunyan",
+    "db:start": "docker run --name passport_app_sessions -d"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.2",
@@ -15,6 +16,7 @@
     "@types/express-session": "^1.17.4",
     "@types/mongoose": "^5.11.97",
     "@types/passport": "^1.0.7",
+    "@types/passport-azure-ad": "^4.3.1",
     "@types/passport-local": "^1.0.34",
     "bunyan": "^1.8.15",
     "nodemon": "^2.0.12",
@@ -29,6 +31,7 @@
     "express-session": "^1.17.2",
     "mongoose": "^5.13.2",
     "passport": "^0.4.1",
+    "passport-azure-ad": "^4.3.1-beta.0",
     "passport-local": "^1.0.0"
   }
 }
