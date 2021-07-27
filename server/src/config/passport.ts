@@ -1,7 +1,9 @@
 import passport from 'passport'
-import { Strategy as LocalStrategy } from 'passport-local'
+import { IProfile, OIDCStrategy, VerifyOIDCFunctionWithReq, VerifyCallback } from 'passport-azure-ad'
 import connection, { User } from './database'
-import isValidPassord from '../passwordUtils'
+import config from './envconfig'
+
+const { AZURE_ID_META_DATA, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_REDIRECT_URL } = config
 
 interface UserObj extends Express.User {
   id: string
@@ -17,53 +19,8 @@ interface UserObj extends Express.User {
 // const customFields = {
 //   usernameField: 'uname',
 //   passwordField: 'pw'
-
 // }
 
-const verifyCallback = (username: string, password: string, done: Function) => {
-  // console.log('In VerifyCallback')
-  // TODO: How to define user
-  User.findOne({ username: username })
-      .then((user) => {
-        if (!user) { return done(null, false) }
-
-        const isValid = isValidPassord(password, user.hash, user.salt)
-
-        if (isValid) {
-          return done(null, user)
-        } else {
-          return done(null, false)
-        }
-      })
-      .catch((err: Error) => {
-        done(err)
-      })
-
-}
-
-// passport.use(new OIDCStrategy({
-//   identityMetadata: config.creds.identityMetadata,
-//   clientID: config.creds.clientID,
-//   responseType: config.creds.responseType,
-//   responseMode: config.creds.responseMode,
-//   redirectUrl: config.creds.redirectUrl,
-//   allowHttpForRedirectUrl: config.creds.allowHttpForRedirectUrl,
-//   clientSecret: config.creds.clientSecret,
-//   validateIssuer: config.creds.validateIssuer,
-//   isB2C: config.creds.isB2C,
-//   issuer: config.creds.issuer,
-//   passReqToCallback: config.creds.passReqToCallback,
-//   scope: config.creds.scope,
-//   loggingLevel: config.creds.loggingLevel,
-//   loggingNoPII: config.creds.loggingNoPII,
-//   nonceLifetime: config.creds.nonceLifetime,
-//   nonceMaxAmount: config.creds.nonceMaxAmount,
-//   useCookieInsteadOfSession: config.creds.useCookieInsteadOfSession,
-//   cookieSameSite: config.creds.cookieSameSite, // boolean
-//   cookieEncryptionKeys: config.creds.cookieEncryptionKeys,
-//   clockSkew: config.creds.clockSkew,
-//   proxy: { port: 'proxyport', host: 'proxyhost', protocol: 'http' },
-// },
 // function(iss, sub, profile, accessToken, refreshToken, done) {
 //   if (!profile.oid) {
 //     return done(new Error("No oid found"), null);
@@ -80,24 +37,72 @@ const verifyCallback = (username: string, password: string, done: Function) => {
 //         return done(null, profile);
 //       }
 //       return done(null, user);
-//     });
-//   });
+//     })
+//   })
 // }
-// ));
 
-const strategy = new LocalStrategy(verifyCallback)
+// TODO: Why am i getting a typing error
+const verifyFn: any = (
+  _req: Request,
+  _iss: string,
+  _sub: string,
+  profile: IProfile,
+  _accessToken: string,
+  _refreshToken: string,
+  done: VerifyCallback
+) => {
+  if (profile) {
+    return done(null, profile.oid)
+  }
+  return done(null, false)
+}
+
+const strategy = new OIDCStrategy({
+    identityMetadata: AZURE_ID_META_DATA!,
+    clientID: AZURE_CLIENT_ID!,
+    clientSecret: AZURE_CLIENT_SECRET,
+    responseType: 'code id_token',
+    responseMode: 'form_post',
+    redirectUrl: AZURE_REDIRECT_URL!,
+    allowHttpForRedirectUrl: true,
+    validateIssuer: false,
+        // issuer: 'horrocksengineersinc.onmicrosoft.com', // Only need if AZURE_ID_META_DATA url is set to a common endpoint
+    passReqToCallback: true,
+    useCookieInsteadOfSession: false, // Only set to true if using { session: false } in `passport.authenticate()`
+    // cookieEncryptionKeys: [
+    //   { key: '12345678901234567890123456789012', iv: '123456789012' },
+    //   { key: 'abcdefghijklmnopqrstuvwxyzabcdef', iv: 'abcdefghijkl' }
+    // ],
+    scope: ['profile'],
+    // Setting loggingLevel to info provides a lot of info that can be used when debugging.
+    loggingLevel: 'info',
+    nonceLifetime: 60 * 60 * 24, // One day in seconds
+    nonceMaxAmount: 5
+  },
+  verifyFn
+)
 
 passport.use(strategy)
 
-// TODO: How to handle user.id
-passport.serializeUser((user: any, done) => {
-  done(null, user.id)
+// TODO: Typings are off here.
+passport.serializeUser(function (user, done) {
+  console.log('serializeUser: ', user)
+  // Second argument passed to session
+  // req.session.passport.user = secondArgument
+  // Generally smart to serialize as little info as possible.
+  // Leads to better performance.
+  // Also prevents data from becoming stale.
+  done(null, user)
 })
 
-passport.deserializeUser((userId, done) => {
-  User.findById(userId)
-    .then((user) => {
-      done(null, user)
-    })
-    .catch((err: Error) => done(err))
+// First parameter is from session
+// req.session.passport.user = firstParameter
+// It is then assigned to req.user
+// This is called on every request because we want to be
+// sure to have accurate, up to do info.
+// req.user = User.findOneById(req.session.passport.user)
+// TODO: Typings are off here.
+passport.deserializeUser(function (user:any, done) {
+  console.log("deserialize: ", user)
+  done(null, user)
 })

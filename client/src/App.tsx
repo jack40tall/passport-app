@@ -11,23 +11,24 @@ import { useState, useEffect } from 'react';
 import LogoutPage from './components/LogoutPage';
 import Register from './components/Register';
 
+const REACT_APP_LOGIN_URL = 'http://localhost:5000/login'
+
 const App: React.FC = () => {
   const [ user, setUser ] = useState(null)
   // const [ history, setHistory ] = useState(useHistory())
 
   const history = useHistory()
-  console.log(history)
   
   const fetchActiveUser = async () => {
     try {
-      const response = await axios.get("/logged_in", { withCredentials: true })
-      if (response.data.username) {
-        console.log(response.data)
-        updateUser(response.data.username) 
-        history.push('/home-protected')
-      }
+      const { data } = await axios.get("/user")
+      updateUser(data) 
+      history.push('/home-protected')
     } catch (err) {
       console.log('Error', err)
+      if (err?.response?.status === 404) {
+        return window.location.replace(REACT_APP_LOGIN_URL!)
+      }
     } 
   }
 
@@ -36,11 +37,13 @@ const App: React.FC = () => {
   }
 
   useEffect(() => {
+    console.log('in useEffect app.tsx')
     fetchActiveUser()
-  })
+  }, [])
   
   return (
     <AuthContext.Provider value={{user: user , setUser: setUser}}>
+      <div>{ user ? user : "No User" }</div>
       <Switch>
         <Route exact path="/">
           <Login />
